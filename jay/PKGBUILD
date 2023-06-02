@@ -1,0 +1,38 @@
+pkgname=jay-git
+pkgver=0.0.1
+pkgrel=1
+pkgdesc="A tiling wayland window manager"
+arch=('x86_64')
+url="https://github.com/mahkoh/jay"
+license=('GPL-3')
+# depends=('fontconfig' 'freetype2' 'libxkbcommon' 'pop-launcher')
+makedepends=('cargo' 'git')
+provides=("${pkgname%-git}")
+conflicts=("${pkgname%-git}")
+source=('git+https://github.com/mahkoh/jay.git')
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$srcdir/${pkgname%-git}"
+  echo 0.0.1
+  # git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  cd "$srcdir/${pkgname%-git}"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$srcdir/${pkgname%-git}"
+  export RUSTUP_TOOLCHAIN=nightly
+  cargo build --frozen --release --all-features
+}
+
+package() {
+  cd "$srcdir/${pkgname%-git}"
+  install -Dm755 "target/release/${pkgname%-git}" -t "$pkgdir/usr/bin/"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/${pkgname%-git}/"
+}
+

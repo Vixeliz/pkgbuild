@@ -1,0 +1,40 @@
+pkgname=onagre-git
+pkgver=1.0.0.alpha.0.r2.g8d4ffe9
+pkgrel=1
+pkgdesc="A general purpose application launcher for X and wayland inspired by rofi/wofi and alfred"
+arch=('x86_64')
+url="https://github.com/oknozor/onagre"
+license=('MIT')
+depends=('fontconfig' 'freetype2' 'libxkbcommon' 'pop-launcher')
+makedepends=('cargo' 'git')
+provides=("${pkgname%-git}")
+conflicts=("${pkgname%-git}")
+source=('git+https://github.com/oknozor/onagre.git')
+sha256sums=('SKIP')
+
+pkgver() {
+  cd "$srcdir/${pkgname%-git}"
+  git describe --long --tags | sed 's/\([^-]*-g\)/r\1/;s/-/./g'
+}
+
+prepare() {
+  cd "$srcdir/${pkgname%-git}"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo fetch --locked --target "$CARCH-unknown-linux-gnu"
+}
+
+build() {
+  cd "$srcdir/${pkgname%-git}"
+  export RUSTUP_TOOLCHAIN=stable
+  cargo build --frozen --release --all-features
+}
+
+package() {
+  cd "$srcdir/${pkgname%-git}"
+  install -Dm755 "target/release/${pkgname%-git}" -t "$pkgdir/usr/bin/"
+  install -Dm644 docs/config.example-ugly.scss -t \
+    "$pkgdir/usr/share/doc/${pkgname%-git}/"
+  install -Dm644 docs/theme_examples/*.scss -t \
+    "$pkgdir/usr/share/doc/${pkgname%-git}/theme_examples/"
+  install -Dm644 LICENSE -t "$pkgdir/usr/share/licenses/${pkgname%-git}/"
+}
